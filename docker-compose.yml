@@ -1,0 +1,50 @@
+services:
+  api:
+    build: { context: ., target: api }
+    env_file: .env
+    environment:
+      SPEECH_DATA_DIR: /data
+    volumes:
+      - speech-data:/data
+      - model-cache:/models
+    ports: ["127.0.0.1:8000:8000"]
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices: [{ driver: nvidia, count: 1, capabilities: [gpu] }]
+
+  # Voice cloning is opt-in:  docker compose --profile clone up -d
+  # and set SPEECH_CLONE_URL=http://clone:8100 + SPEECH_CLONE_TOKEN in .env
+  clone:
+    profiles: ["clone"]
+    build: { context: ., target: clone }
+    environment:
+      CLONE_TOKEN: ${SPEECH_CLONE_TOKEN:-}
+      CLONE_DATA_DIR: /data
+    volumes:
+      - speech-data:/data:ro
+      - model-cache:/models
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices: [{ driver: nvidia, count: 1, capabilities: [gpu] }]
+
+  # TLS termination (automatic certificates). Set SPEECH_DOMAIN in .env; DNS must point at this host.
+  caddy:
+    image: caddy:2
+    profiles: ["tls"]
+    ports: ["80:80", "443:443"]
+    environment:
+      SPEECH_DOMAIN: ${SPEECH_DOMAIN:-localhost}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on: [api]
+    restart: unless-stopped
+
+volumes:
+  speech-data:
+  model-cache:
+  caddy-data:

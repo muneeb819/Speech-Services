@@ -1,0 +1,11 @@
+{$SPEECH_DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 320MB
+	}
+	@internal path /metrics /readyz
+	respond @internal 404
+	reverse_proxy api:8000 {
+		flush_interval -1
+	}
+}

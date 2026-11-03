@@ -1,0 +1,13 @@
+# Runtime (torch is installed separately in the Dockerfile with the right CUDA build)
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic-settings==2.7.0
+python-multipart==0.0.20
+httpx==0.28.1
+numpy>=1.26,<3
+soundfile>=0.13,<1
+soxr>=0.5,<2
+prometheus-client==0.21.1
+faster-whisper==1.2.1
+kokoro==0.9.4
+misaki[en]==0.9.4
